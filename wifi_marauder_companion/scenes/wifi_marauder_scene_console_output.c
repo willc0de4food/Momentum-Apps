@@ -1,9 +1,19 @@
 #include "../wifi_marauder_app_i.h"
 
+// Returns a pointer to the start of the last line in `command`. For multi-line
+// command strings like "channel 1\nsniffraw -g" we care about the prefix of the
+// final command (sniff/wardrive/etc.) when deciding capture-file behavior, not
+// the prefix of the setup command that runs first.
+static const char* _wifi_marauder_last_line(const char* command) {
+    const char* nl = strrchr(command, '\n');
+    return nl ? nl + 1 : command;
+}
+
 char* _wifi_marauder_get_prefix_from_cmd(const char* command) {
-    int end = strcspn(command, " ");
+    const char* tail = _wifi_marauder_last_line(command);
+    int end = strcspn(tail, " ");
     char* prefix = (char*)malloc(sizeof(char) * (end + 1));
-    strncpy(prefix, command, end);
+    strncpy(prefix, tail, end);
     prefix[end] = '\0';
     return prefix;
 }
@@ -32,12 +42,15 @@ bool _wifi_marauder_is_saving_enabled(WifiMarauderApp* app) {
     if(!app->ok_to_save_pcaps) {
         return false;
     }
-    // If it is a sniff/wardrive/btwardrive/evilportal function
-    return app->is_command && app->selected_tx_string &&
-           (strncmp("sniff", app->selected_tx_string, strlen("sniff")) == 0 ||
-            strncmp("wardrive", app->selected_tx_string, strlen("wardrive")) == 0 ||
-            strncmp("btwardrive", app->selected_tx_string, strlen("btwardrive")) == 0 ||
-            strncmp("evilportal", app->selected_tx_string, strlen("evilportal")) == 0);
+    // If it is a sniff/wardrive/btwardrive/evilportal function. For multi-line
+    // commands ("channel 1\nsniffraw -g"), check the prefix of the last line so
+    // setup commands like "channel" don't suppress capture-file creation.
+    if(!app->is_command || !app->selected_tx_string) return false;
+    const char* tail = _wifi_marauder_last_line(app->selected_tx_string);
+    return strncmp("sniff", tail, strlen("sniff")) == 0 ||
+           strncmp("wardrive", tail, strlen("wardrive")) == 0 ||
+           strncmp("btwardrive", tail, strlen("btwardrive")) == 0 ||
+           strncmp("evilportal", tail, strlen("evilportal")) == 0;
 }
 
 void wifi_marauder_console_output_handle_rx_data_cb(uint8_t* buf, size_t len, void* context) {
@@ -152,7 +165,10 @@ void wifi_marauder_scene_console_output_on_enter(void* context) {
             const char* folder = NULL;
             const char* extension = NULL;
             if(app->script || // Scripts only support sniff functions, but selected_tx_string is empty
-               strncmp("sniff", app->selected_tx_string, strlen("sniff")) == 0) {
+               strncmp(
+                   "sniff",
+                   _wifi_marauder_last_line(app->selected_tx_string),
+                   strlen("sniff")) == 0) {
                 folder = MARAUDER_APP_FOLDER_PCAPS;
                 extension = "pcap";
             } else {

@@ -207,6 +207,32 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
+    {"Sniff + GPS",
+     // The "raw ch1/ch6/ch11" entries lock the radio to a single 2.4 GHz channel
+     // before starting the raw sniff. The companion sends the multi-line command
+     // verbatim (with embedded '\n'); the firmware processes the lines sequentially
+     // — first the channel lock, then the sniffraw -g. This catches all frames on
+     // the locked channel without channel-hop misses, which is critical for
+     // duty-cycled Flock detection (Flocks beacon on ch1).
+     {"raw", "raw ch1", "raw ch6", "raw ch11", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "airtag", "flipper", "mactrack", "packetcount"},
+     14,
+     {"sniffraw -g",
+      "channel -s 1\nsniffraw -g",
+      "channel -s 6\nsniffraw -g",
+      "channel -s 11\nsniffraw -g",
+      "sniffprobe -g",
+      "sniffbeacon -g",
+      "sniffdeauth -g",
+      "sniffpmkid -g",
+      "sniffbt -g",
+      "sniffbt -t flock -g",
+      "sniffbt -t airtag -g",
+      "sniffbt -t flipper -g",
+      "mactrack -g",
+      "packetcount -g"},
+     NO_ARGS,
+     FOCUS_CONSOLE_END,
+     SHOW_STOPSCAN_TIP},
     {"Signal Monitor", {""}, 1, {"sigmon"}, NO_ARGS, FOCUS_CONSOLE_END, SHOW_STOPSCAN_TIP},
     {"Channel",
      {"get", "set"},
@@ -291,9 +317,8 @@ static void wifi_marauder_scene_start_var_list_enter_callback(void* context, uin
         return;
     }
 
-    if(app->selected_tx_string &&
-       strncmp("sniffpmkid", app->selected_tx_string, strlen("sniffpmkid")) == 0) {
-        // sniffpmkid submenu
+    if(app->selected_tx_string && strcmp("sniffpmkid", app->selected_tx_string) == 0) {
+        // sniffpmkid submenu (exact match — "sniffpmkid -g" goes straight to console)
         view_dispatcher_send_custom_event(
             app->view_dispatcher, WifiMarauderEventStartSniffPmkidOptions);
         return;

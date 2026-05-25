@@ -213,13 +213,17 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      // verbatim (with embedded '\n'); the firmware processes the lines sequentially
      // — first the channel lock, then the sniffraw -g. This catches all frames on
      // the locked channel without channel-hop misses, which is critical for
-     // duty-cycled Flock detection (Flocks beacon on ch1).
-     {"raw", "raw ch1", "raw ch6", "raw ch11", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "airtag", "flipper", "mactrack", "packetcount"},
-     14,
+     // duty-cycled Flock detection (Flocks beacon on ch1). The "raw hop" entry
+     // re-enables the firmware's ChanHop setting before starting the sniff so the
+     // radio cycles through channels — pair it with the lock entries to easily
+     // switch between locked and hopping modes without leaving the menu.
+     {"raw", "raw ch1", "raw ch6", "raw ch11", "raw hop", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "airtag", "flipper", "mactrack", "packetcount"},
+     15,
      {"sniffraw -g",
       "channel -s 1\nsniffraw -g",
       "channel -s 6\nsniffraw -g",
       "channel -s 11\nsniffraw -g",
+      "settings -s ChanHop enable\nsniffraw -g",
       "sniffprobe -g",
       "sniffbeacon -g",
       "sniffdeauth -g",

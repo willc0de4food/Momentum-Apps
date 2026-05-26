@@ -219,7 +219,7 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      // switch between locked and hopping modes without leaving the menu.
      {"raw", "raw ch1", "raw ch6", "raw ch11", "raw hop", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "airtag", "flipper", "mactrack", "packetcount"},
      15,
-     {"sniffraw -g",
+     {"settings -s ChanHop enable\nsniffraw -g",
       "settings -s ChanHop disable\nchannel -s 1\nsniffraw -g",
       "settings -s ChanHop disable\nchannel -s 6\nsniffraw -g",
       "settings -s ChanHop disable\nchannel -s 11\nsniffraw -g",

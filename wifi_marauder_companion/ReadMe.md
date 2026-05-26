@@ -1,3 +1,49 @@
+# Fork notes (willc0de4food)
+
+This fork adds GPS-aware menu entries to support
+[willc0de4food/ESP32Marauder](https://github.com/willc0de4food/ESP32Marauder),
+a personal fork of the firmware that emits DLT-192 PPI pcaps with per-frame
+GPS tags and per-frame radiotap RSSI/channel. **These menu entries will not
+work on stock Marauder firmware** — the `-g` / `--gps` flag they pass on every
+sniff command is only recognized by that firmware fork. Use the matching
+firmware or these entries will fail / fall back to non-GPS captures.
+
+## What's different from upstream
+
+- **New "Sniff + GPS" top-level menu** with sub-entries pre-wired with `-g`:
+  - `raw` / `raw hop` — start a raw 802.11 sniff and ensure channel-hop is
+    enabled before sniffing (via `settings -s ChanHop enable`)
+  - `raw ch1` / `raw ch6` / `raw ch11` — disable channel-hop and lock the
+    radio to one 2.4 GHz channel before sniffing (`settings -s ChanHop disable`
+    + `channel -s N`). Useful for catching duty-cycled devices that beacon
+    or probe on a known channel (e.g. Flock ALPR cameras).
+  - `probe`, `beacon`, `deauth`, `pmkid`, `bt`, `flock`, `airtag`, `flipper`,
+    `mactrack`, `packetcount` — standard variants of those sniffs, with `-g`
+    applied so each pcap carries per-frame GPS coordinates.
+- **Multi-line UART commands** for the channel-locked / channel-hop entries
+  use `\n`-separated sequences (e.g. `settings -s ChanHop disable\nchannel -s 1\nsniffraw -g`).
+  The companion's prefix-extraction logic (`_wifi_marauder_last_line()`) was
+  updated to inspect the *last* line of the command when deciding whether
+  to open a pcap file and append `-serial` for streaming, so multi-step
+  setup commands don't break the capture-file plumbing.
+
+## Why
+
+This is the Flipper-side half of an open-source research project tracking
+Flock Safety ALPR cameras and similar public-safety surveillance infrastructure
+in the user's neighborhood — same category of work as Wireshark, Kismet,
+hcxdumptool, and [deflock.me](https://deflock.me). All captures are of public
+802.11 broadcasts (beacons, probe-requests, deauths); no decryption, no
+client targeting.
+
+The matching firmware lives at
+[willc0de4food/ESP32Marauder](https://github.com/willc0de4food/ESP32Marauder).
+See that repo's README for what was added on the firmware side
+(PPI per-frame GPS tagging, embedded radiotap header for per-frame RSSI +
+channel, `-g`/`--gps` CLI flag).
+
+---
+
 [![FAP Build](https://github.com/0xchocolate/flipperzero-wifi-marauder/actions/workflows/build.yml/badge.svg)](https://github.com/0xchocolate/flipperzero-wifi-marauder/actions/workflows/build.yml)
 
 # WiFi Marauder companion app for Flipper Zero

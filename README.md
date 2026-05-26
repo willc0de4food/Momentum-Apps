@@ -1,3 +1,36 @@
+# Fork notes (willc0de4food)
+
+This is a personal fork of
+[Next-Flip/Momentum-Apps](https://github.com/Next-Flip/Momentum-Apps) with
+modifications scoped to **`wifi_marauder_companion/`** in support of an
+open-source ALPR-camera research project. All other apps in this repo are
+unchanged from upstream.
+
+## What's modified
+
+- **`wifi_marauder_companion/`** — adds a "Sniff + GPS" top-level menu with
+  channel-locked / channel-hop variants (`raw`, `raw ch1`, `raw ch6`,
+  `raw ch11`, `raw hop`, etc.), wires the `-g`/`--gps` flag onto every
+  sniff command, and updates the prefix-extraction logic to handle
+  multi-line UART command sequences. See
+  [`wifi_marauder_companion/ReadMe.md`](wifi_marauder_companion/ReadMe.md)
+  for the full breakdown.
+
+## Important — requires the matching firmware fork
+
+The new menu entries in `wifi_marauder_companion/` send commands using a
+`-g`/`--gps` flag that **does not exist in stock Marauder firmware**. To use
+them, the Marauder firmware on your attached ESP32 board must be from this
+project's matching firmware fork:
+
+➡️ **[willc0de4food/ESP32Marauder](https://github.com/willc0de4food/ESP32Marauder)**
+
+That firmware fork adds DLT-192 PPI per-frame GPS tagging, a radiotap header
+embedded inside the PPI capsule (per-frame RSSI + channel), and the
+`-g`/`--gps` CLI flag that this companion app's menus rely on.
+
+---
+
 # Momentum-Apps
 Bundle of external apps tweaked for [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware).
 

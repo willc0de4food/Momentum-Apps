@@ -12,9 +12,18 @@ unchanged from upstream.
   channel-locked / channel-hop variants (`raw`, `raw ch1`, `raw ch6`,
   `raw ch11`, `raw hop`, etc.), wires the `-g`/`--gps` flag onto every
   sniff command, and updates the prefix-extraction logic to handle
-  multi-line UART command sequences. See
-  [`wifi_marauder_companion/ReadMe.md`](wifi_marauder_companion/ReadMe.md)
-  for the full breakdown.
+  multi-line UART command sequences.
+
+## Where to find build / install info
+
+All fork-specific docs live inside the `wifi_marauder_companion/` subdir:
+
+- [`wifi_marauder_companion/ReadMe.md`](wifi_marauder_companion/ReadMe.md)
+  — the full feature breakdown and human-facing changelog.
+- [`wifi_marauder_companion/CLAUDE.md`](wifi_marauder_companion/CLAUDE.md)
+  — step-by-step build & install instructions written for AI coding
+  assistants (Claude Code, etc.). If you want your LLM session to build
+  the `.fap` and tell you how to flash it, point it at that file.
 
 ## Important — requires the matching firmware fork
 

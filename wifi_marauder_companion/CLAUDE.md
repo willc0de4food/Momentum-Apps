@@ -53,7 +53,14 @@ user doesn't already have it on their Dev Board.
    ```bash
    python3 -m pip install --upgrade ufbt
    ```
-   Or use a venv if the system Python is externally-managed (Arch/etc.):
+   On externally-managed distros (Arch/etc.) where plain `pip install`
+   is blocked (PEP 668), use `pipx` — it isolates ufbt and puts it on
+   PATH at `~/.local/bin/ufbt`:
+   ```bash
+   # Arch: pacman -S python-pipx  (Debian/Ubuntu: apt install pipx)
+   pipx install ufbt
+   ```
+   Or a plain venv:
    ```bash
    python3 -m venv ~/.ufbt-venv
    source ~/.ufbt-venv/bin/activate
@@ -62,12 +69,15 @@ user doesn't already have it on their Dev Board.
 
 2. **First-time `ufbt update`** — fetches the Flipper SDK matching the
    target firmware. By default it tracks the official Flipper firmware
-   release channel; for **Momentum firmware** (which this fork targets),
-   set the channel:
+   release channel. **Momentum firmware** (which this fork targets) is
+   served from Momentum's own update index, selected with `--index-url`.
+   Stock `ufbt` only accepts `dev`/`rc`/`release` for `--channel`, so
+   there is **no** `momentum-release` channel — use the index URL:
    ```bash
-   ufbt update --channel=momentum-release
-   # OR for dev builds of Momentum:
-   # ufbt update --channel=momentum-dev
+   ufbt update --index-url=https://up.momentum-fw.dev/firmware/directory.json
+   # ^ pulls Momentum's release SDK (the index's default channel).
+   # For Momentum dev/rc builds, add the channel:
+   # ufbt update --index-url=https://up.momentum-fw.dev/firmware/directory.json --channel=dev
    ```
 
 3. **Sparse checkout of just this app** (optional but recommended — the
@@ -124,9 +134,9 @@ the `dist/` copy is canonical.)
   Check `~/.local/bin/ufbt`. Add `~/.local/bin` to PATH, or call ufbt
   with the full path.
 - **Build error mentioning `gui/scene_manager.h` or similar SDK
-  headers** — `ufbt update` hasn't been run, or the SDK channel is
-  wrong. Run `ufbt update --channel=momentum-release` (or
-  `momentum-dev`) and try again.
+  headers** — `ufbt update` hasn't been run, or the wrong SDK was
+  fetched. Run `ufbt update --index-url=https://up.momentum-fw.dev/firmware/directory.json`
+  (add `--channel=dev` for a Momentum dev build) and try again.
 - **Build error: `MAX_OPTIONS` exceeded** — the menu items array in
   `scenes/wifi_marauder_scene_start.c` exceeds 16 entries. Either trim
   entries or bump `MAX_OPTIONS` and `NUM_MENU_ITEMS` correspondingly
@@ -139,9 +149,9 @@ the `dist/` copy is canonical.)
   [willc0de4food/ESP32Marauder](https://github.com/willc0de4food/ESP32Marauder).
 - **App crashes on launch** — usually a Flipper-firmware-vs-SDK API
   mismatch. Confirm the target firmware running on the Flipper matches
-  the channel you ran `ufbt update --channel=` against (e.g. Momentum
-  release vs. dev). If unsure, re-run `ufbt update --channel=...` for
-  the channel matching the firmware on the device, then rebuild.
+  the SDK you ran `ufbt update` against (e.g. Momentum release vs. dev).
+  If unsure, re-run `ufbt update --index-url=https://up.momentum-fw.dev/firmware/directory.json`
+  (with `--channel=` matching the firmware on the device), then rebuild.
 - **Channel-locked entries (`raw ch1` etc.) still hop / channel-hop
   entries (`raw hop`) stay locked** — the firmware's persistent
   `ChanHop` setting in SPIFFS got out of sync with what the menu
@@ -156,9 +166,10 @@ the `dist/` copy is canonical.)
 If a user asks "build the companion app for me" the canonical sequence is:
 
 1. Verify `ufbt` is installed (`which ufbt` or `python3 -m ufbt --help`).
-2. Verify `ufbt update` has been run for the right channel. If unsure
-   which channel, ask the user (most likely `momentum-release` for this
-   fork).
+2. Verify `ufbt update` has been run against Momentum's index
+   (`--index-url=https://up.momentum-fw.dev/firmware/directory.json`).
+   If unsure which channel, ask the user (Momentum release — the index's
+   default channel — for this fork).
 3. `cd` into `wifi_marauder_companion/` and run `ufbt`.
 4. Confirm `dist/esp32_wifi_marauder.fap` was produced.
 5. Tell the user the path to the `.fap` and where to drop it on the SD

@@ -90,6 +90,11 @@ struct WifiMarauderApp {
     bool show_stopscan_tip;
     bool is_writing_pcap;
     bool is_writing_log;
+    // Monotonic count of pcap bytes written to capture_file, bumped from the
+    // UART worker thread's rx-pcap callback. on_exit polls this to drain the
+    // ESP's in-flight [BUF/BEGIN]..[BUF/CLOSE] blob before closing the file,
+    // instead of guessing with a fixed delay (which truncated captures).
+    volatile size_t pcap_bytes_received;
 
     // User input
     WifiMarauderUserInputType user_input_type;

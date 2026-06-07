@@ -81,6 +81,7 @@ void wifi_marauder_console_output_handle_rx_packets_cb(uint8_t* buf, size_t len,
 
     if(app->is_writing_pcap) {
         storage_file_write(app->capture_file, buf, len);
+        app->pcap_bytes_received += len;
     }
 }
 
@@ -247,7 +248,36 @@ void wifi_marauder_scene_console_output_on_exit(void* context) {
     // Automatically stop the scan when exiting view
     if(app->is_command) {
         wifi_marauder_uart_tx(app->uart, (uint8_t*)("stopscan\n"), strlen("stopscan\n"));
-        furi_delay_ms(50);
+
+        if(app->is_writing_pcap) {
+            // The ESP may still be clocking out an in-flight pcap blob
+            // ([BUF/BEGIN]..[BUF/CLOSE]); a full 8KB buffer takes ~700ms at
+            // 115200 baud. Closing on a fixed 50ms delay truncated the file
+            // mid-record. Instead, drain until the capture stops growing —
+            // that means the last blob has fully arrived and the closing
+            // marker has flipped us back out of pcap mode, so no post-stop
+            // console text can splice into the file. Hard-capped so a wedged
+            // ESP can't hang the exit.
+            const uint32_t poll_ms = 20;
+            const uint32_t quiet_target_ms = 120; // silence => blob complete
+            const uint32_t max_wait_ms = 2000; // backstop
+            uint32_t quiet_ms = 0;
+            uint32_t waited_ms = 0;
+            size_t last_seen = app->pcap_bytes_received;
+            while(waited_ms < max_wait_ms && quiet_ms < quiet_target_ms) {
+                furi_delay_ms(poll_ms);
+                waited_ms += poll_ms;
+                size_t now_seen = app->pcap_bytes_received;
+                if(now_seen == last_seen) {
+                    quiet_ms += poll_ms;
+                } else {
+                    quiet_ms = 0;
+                    last_seen = now_seen;
+                }
+            }
+        } else {
+            furi_delay_ms(50);
+        }
     }
 
     // Unregister rx callback

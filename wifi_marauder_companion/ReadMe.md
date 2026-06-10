@@ -17,6 +17,10 @@ firmware or these entries will fail / fall back to non-GPS captures.
     radio to one 2.4 GHz channel before sniffing (`settings -s ChanHop disable`
     + `channel -s N`). Useful for catching duty-cycled devices that beacon
     or probe on a known channel (e.g. Flock ALPR cameras).
+  - `flock ch1` / `flock hop` — the same lock / channel-hop choice applied to
+    the Flock sniff (`sniffbt -t flock -g`). Plain `flock` inherits whatever
+    `ChanHop` state was last set, so these make it explicit: `ch1` to dwell on
+    a known camera, `hop` to also catch cameras on ch6 / ch11.
   - `probe`, `beacon`, `deauth`, `pmkid`, `bt`, `flock`, `airtag`, `flipper`,
     `mactrack`, `packetcount` — standard variants of those sniffs, with `-g`
     applied so each pcap carries per-frame GPS coordinates.
@@ -26,6 +30,12 @@ firmware or these entries will fail / fall back to non-GPS captures.
   updated to inspect the *last* line of the command when deciding whether
   to open a pcap file and append `-serial` for streaming, so multi-step
   setup commands don't break the capture-file plumbing.
+- **GPS no-fix alert.** During a "Sniff + GPS" capture the firmware emits
+  `[GPS] FIX/NOFIX sats=N` lines over UART; the companion parses them and fires
+  a Flipper notification (buzzer + vibrate + blinking red LED) whenever the
+  capture has no GPS fix, with the satellite count shown in the console. Without
+  it, a fixless capture silently records the firmware's `-180` no-fix sentinel
+  for every frame and you only discover the positionless pcap back home.
 
 ## Why
 

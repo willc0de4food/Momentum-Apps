@@ -28,6 +28,9 @@ WifiMarauderApp* wifi_marauder_app_alloc() {
     app->gui = furi_record_open(RECORD_GUI);
     app->dialogs = furi_record_open(RECORD_DIALOGS);
     app->storage = furi_record_open(RECORD_STORAGE);
+    app->notifications = furi_record_open(RECORD_NOTIFICATION);
+    app->gps_status_known = false;
+    app->gps_has_fix = false;
     app->capture_file = storage_file_alloc(app->storage);
     app->log_file = storage_file_alloc(app->storage);
     app->save_pcap_setting_file = storage_file_alloc(app->storage);
@@ -173,6 +176,7 @@ void wifi_marauder_app_free(WifiMarauderApp* app) {
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_DIALOGS);
+    furi_record_close(RECORD_NOTIFICATION);
 
     free(app);
 }

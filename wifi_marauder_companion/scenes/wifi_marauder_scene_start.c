@@ -224,8 +224,11 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      // re-enables the firmware's ChanHop setting before starting the sniff so the
      // radio cycles through channels — pair it with the lock entries to easily
      // switch between locked and hopping modes without leaving the menu.
-     {"raw", "raw ch1", "raw ch6", "raw ch11", "raw hop", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "airtag", "flipper", "mactrack", "packetcount"},
-     15,
+     // "flock ch1" / "flock hop" apply the same lock/hop choice to the Flock sniff —
+     // plain "flock" inherits whatever ChanHop state was last set, so these make it
+     // explicit: ch1 lock for a known camera, hop to also find cameras on ch6/ch11.
+     {"raw", "raw ch1", "raw ch6", "raw ch11", "raw hop", "probe", "beacon", "deauth", "pmkid", "bt", "flock", "flock ch1", "flock hop", "airtag", "flipper", "mactrack", "packetcount"},
+     17,
      {"settings -s ChanHop enable\nsniffraw -g",
       "settings -s ChanHop disable\nchannel -s 1\nsniffraw -g",
       "settings -s ChanHop disable\nchannel -s 6\nsniffraw -g",
@@ -237,6 +240,8 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "sniffpmkid -g",
       "sniffbt -g",
       "sniffbt -t flock -g",
+      "settings -s ChanHop disable\nchannel -s 1\nsniffbt -t flock -g",
+      "settings -s ChanHop enable\nsniffbt -t flock -g",
       "sniffbt -t airtag -g",
       "sniffbt -t flipper -g",
       "mactrack -g",

@@ -72,6 +72,24 @@ void wifi_marauder_console_output_handle_rx_data_cb(uint8_t* buf, size_t len, vo
     // Null-terminate buf and append to text box store
     buf[len] = '\0';
     furi_string_cat_printf(app->text_box_store, "%s", buf);
+
+    // GPS fix alerts — the firmware emits "[GPS] FIX" / "[GPS] NOFIX" every 2s
+    // during a PPI (Sniff + GPS) capture. No fix means frames are logging the
+    // -180 sentinel, so alert the user, who can't watch the console while walking.
+    if(strstr((char*)buf, "[GPS] NOFIX")) {
+        bool was_ok = !app->gps_status_known || app->gps_has_fix;
+        app->gps_status_known = true;
+        app->gps_has_fix = false;
+        // Strong buzz on entering no-fix (or first status); persistent red blink while it lasts.
+        notification_message(
+            app->notifications, was_ok ? &sequence_error : &sequence_blink_red_100);
+    } else if(strstr((char*)buf, "[GPS] FIX")) {
+        bool was_bad = app->gps_status_known && !app->gps_has_fix;
+        app->gps_status_known = true;
+        app->gps_has_fix = true;
+        if(was_bad) notification_message(app->notifications, &sequence_success);
+    }
+
     view_dispatcher_send_custom_event(app->view_dispatcher, WifiMarauderEventRefreshConsoleOutput);
 }
 
@@ -87,6 +105,11 @@ void wifi_marauder_console_output_handle_rx_packets_cb(uint8_t* buf, size_t len,
 
 void wifi_marauder_scene_console_output_on_enter(void* context) {
     WifiMarauderApp* app = context;
+
+    // Fresh GPS-fix state per capture, so a new capture starting with no fix
+    // still triggers the strong alert (not just the steady-state blink).
+    app->gps_status_known = false;
+    app->gps_has_fix = false;
 
     // Reset text box and set font
     TextBox* text_box = app->text_box;

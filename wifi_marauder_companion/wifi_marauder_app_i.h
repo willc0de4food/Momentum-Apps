@@ -26,6 +26,7 @@
 #include <storage/storage.h>
 #include <lib/toolbox/path.h>
 #include <dialogs/dialogs.h>
+#include <notification/notification_messages.h>
 
 #define NUM_MENU_ITEMS (33)
 
@@ -55,6 +56,7 @@ struct WifiMarauderApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
+    NotificationApp* notifications;
 
     char text_input_store[WIFI_MARAUDER_TEXT_INPUT_STORE_SIZE + 1];
     FuriString* text_box_store;
@@ -95,6 +97,12 @@ struct WifiMarauderApp {
     // ESP's in-flight [BUF/BEGIN]..[BUF/CLOSE] blob before closing the file,
     // instead of guessing with a fixed delay (which truncated captures).
     volatile size_t pcap_bytes_received;
+
+    // GPS fix tracking — driven by "[GPS] FIX/NOFIX" lines the firmware emits
+    // every 2s during a PPI (Sniff + GPS) capture, so a lost fix gets surfaced
+    // instead of silently logging the -180 no-fix sentinel into the pcap.
+    bool gps_status_known;
+    bool gps_has_fix;
 
     // User input
     WifiMarauderUserInputType user_input_type;
